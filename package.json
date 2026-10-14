@@ -1,0 +1,22 @@
+{
+  "name": "kabbalistic-rhizomorph-x1",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc --noEmit && vite build",
+    "preview": "vite preview",
+    "test:model": "node --experimental-strip-types scripts/model-check.ts"
+  },
+  "dependencies": {
+    "@solana/web3.js": "^1.99.0",
+    "@wallet-standard/app": "^1.1.1",
+    "buffer": "^6.0.3"
+  },
+  "devDependencies": {
+    "@types/node": "^26.6.5",
+    "typescript": "^5.9.3",
+    "vite": "^8.3.4"
+  }
+}

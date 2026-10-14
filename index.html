@@ -1,0 +1,165 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>The Kabbalistic Rhizomorph · X1 dApp</title>
+  <meta name="description" content="Interactive Tree of Life × Flower of Life on the X1 network: Kabbalah, Shevirat HaKelim and Rhizomorphic Pathway Analysis with on-chain Tikkun commitments." />
+  <link rel="icon" href="/TreeFlower.png" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,700;1,500&family=Frank+Ruhl+Libre:wght@500;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet" />
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <img src="/TreeFlower.png" alt="" class="brand-mark" />
+      <div>
+        <h1>The Kabbalistic Rhizomorph</h1>
+        <p class="sub">Hyphal primacy · Catastrophic dissonance · Partzufic bundling</p>
+      </div>
+    </div>
+    <div class="chain">
+      <div class="chip" id="netChip" title="https://rpc.mainnet.x1.xyz">
+        <span class="dot" id="netDot"></span>
+        <span>X1 Mainnet</span>
+        <span class="mono muted" id="slot">slot —</span>
+      </div>
+      <div class="wallet">
+        <select id="walletSelect" class="hidden" aria-label="Choose wallet"></select>
+        <button id="connectBtn" class="btn primary">Connect wallet</button>
+      </div>
+    </div>
+  </header>
+
+  <nav class="phases" id="phaseBar" aria-label="Cosmological phases"></nav>
+
+  <main class="layout">
+    <section class="stage-col">
+      <div class="phase-blurb" id="phaseBlurb"></div>
+
+      <div class="stage" id="stage">
+        <img src="/TreeFlower.png" alt="Tree of Life inscribed in the Flower of Life" id="treeImg" draggable="false" />
+        <svg id="overlay" viewBox="0 0 1017 864" preserveAspectRatio="xMidYMid meet" aria-label="Interactive Sefirot and pathways"></svg>
+        <canvas id="fx"></canvas>
+        <div class="stage-toast" id="toast"></div>
+      </div>
+
+      <div class="controls">
+        <div class="ctl-group">
+          <span class="ctl-label">Path system</span>
+          <div class="seg" id="systemSeg">
+            <button data-sys="kircher" class="on" title="Hermetic / Kircher tree — the paths drawn in the image">Kircher</button>
+            <button data-sys="ari" title="Lurianic (Ari/Gra) tree — Mothers horizontal, Doubles vertical, Simples diagonal">Ari / Gra</button>
+          </div>
+        </div>
+        <label class="ctl-group slider">
+          <span class="ctl-label">Anastomosis κ <b id="kVal" class="mono">0.60</b></span>
+          <input type="range" id="kappa" min="0" max="1" step="0.01" value="0.6" />
+        </label>
+        <label class="ctl-group slider">
+          <span class="ctl-label">Influx of Or Φ <b id="phiVal" class="mono">0.80</b></span>
+          <input type="range" id="phi" min="0.05" max="2.5" step="0.01" value="0.8" />
+        </label>
+        <div class="ctl-group">
+          <span class="ctl-label">Layers</span>
+          <div class="toggles" id="layerToggles">
+            <button data-layer="clades" class="on">Clades</button>
+            <button data-layer="flow" class="on">Shefa flow</button>
+            <button data-layer="labels" class="on">Labels</button>
+            <button data-layer="partzufim">Partzufim</button>
+            <button data-layer="anatomy">Rhizomorph anatomy</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="actions" id="phaseActions"></div>
+    </section>
+
+    <aside class="side">
+      <section class="panel" id="inspector">
+        <header><h2>Inspector</h2><span class="tag" id="inspTag">SEFIRA</span></header>
+        <div id="inspBody"></div>
+      </section>
+
+      <section class="panel">
+        <header><h2>Rhizomorphic Pathway Analysis</h2></header>
+        <div class="metrics">
+          <div class="metric"><span>Induced dissonance η</span><b class="mono" id="mEta">—</b></div>
+          <div class="metric"><span>η<sub>max</sub> (Nekudim)</span><b class="mono" id="mEtaMax">—</b></div>
+          <div class="metric"><span>Shefa delivered → Malkhut</span><b class="mono" id="mDeliv">—</b></div>
+          <div class="metric"><span>Growth rate</span><b class="mono" id="mGrowth">—</b></div>
+          <div class="metric"><span>Coherence amplification γ</span><b class="mono" id="mGamma">—</b></div>
+          <div class="metric"><span>Clade-geometry fit</span><b class="mono" id="mFit">—</b></div>
+        </div>
+        <div class="gauge">
+          <div class="gauge-head"><span>Topological coherence C<sub>topo</sub> = 1 − η/η<sub>max</sub></span><b class="mono" id="mC">—</b></div>
+          <div class="gauge-track"><div class="gauge-fill" id="cFill"></div><div class="gauge-floor" title="φ⁻¹ ≈ 0.618"></div></div>
+          <div class="gauge-foot"><span>0</span><span>φ⁻¹ 0.618 floor</span><span>1</span></div>
+        </div>
+        <h3>Vessel stress σ / yield</h3>
+        <div class="bars" id="riskBars"></div>
+        <h3>Effective tempo τ̄ (anastomotic convergence)</h3>
+        <div class="tempo" id="tempoChart"></div>
+        <h3>Hyphal bottlenecks (edge betweenness)</h3>
+        <ul class="bottlenecks" id="bottlenecks"></ul>
+      </section>
+
+      <section class="panel">
+        <header><h2>Seder Hishtalshelut</h2><span class="tag">≔ cascade</span></header>
+        <p class="note mono">𝒲<sub>Assiah</sub> ≔ 𝓕(𝒲<sub>Yetzirah</sub> ≔ 𝓖(𝒲<sub>Beriah</sub> ≔ 𝓗(𝒲<sub>Atzilut</sub>)))</p>
+        <div class="worlds" id="worlds"></div>
+      </section>
+
+      <section class="panel" id="droPanel">
+        <header>
+          <h2>Resonant Oscillator (DRO)</h2>
+          <span class="tag" id="droStateTag">LUMINOUS</span>
+        </header>
+        <p class="sub-equation mono">d²x/dt² + 2ζω₀ dx/dt + ω₀² x = F(t)</p>
+        
+        <div class="dro-stage">
+          <canvas id="droCanvas" width="380" height="220"></canvas>
+          <div class="dro-badge" id="droArchetype">φ⁻¹ Golden Ratio</div>
+        </div>
+
+        <div class="metrics">
+          <div class="metric"><span>Amplitude A(t)</span><b class="mono" id="droAmp">1.000</b></div>
+          <div class="metric"><span>Natural Freq ω₀</span><b class="mono" id="droOmega">—</b></div>
+          <div class="metric"><span>Effective Damping ζ</span><b class="mono" id="droZeta">—</b></div>
+          <div class="metric"><span>Phase Efficiency</span><b class="mono" id="droEff">—</b></div>
+        </div>
+
+        <div class="actions" style="margin-top: 10px;">
+          <button class="btn gold" id="droPumpBtn" style="flex: 1;">Resonate / Pump F(t)</button>
+          <button class="btn" id="droTuneBtn" style="flex: 1;" title="Wait for phase peak to maximize resonance">Phase-Lock Sync</button>
+        </div>
+        <button class="btn wide" id="droExportBtn">Export Soulbound DRO Certificate</button>
+      </section>
+
+      <section class="panel" id="ledgerPanel">
+        <header><h2>Tikkun Ledger · X1</h2><span class="tag">R(t+1) = R(t) ⊕<sub>τ</sub> ι(t)</span></header>
+        <div class="metrics">
+          <div class="metric"><span>Sparks gathered (this cycle)</span><b class="mono" id="lSparks">0 / 288</b></div>
+          <div class="metric"><span>Σ local ratchet</span><b class="mono" id="lSigma">0</b></div>
+          <div class="metric"><span>Uncommitted ι</span><b class="mono" id="lDelta">0</b></div>
+          <div class="metric"><span>Σ on X1 (your commits)</span><b class="mono" id="lChain">—</b></div>
+          <div class="metric"><span>Wallet</span><b class="mono" id="lAddr">not connected</b></div>
+          <div class="metric"><span>Balance</span><b class="mono" id="lBal">—</b></div>
+        </div>
+        <button class="btn gold wide" id="commitBtn" disabled>Commit Tikkun to X1 (≔)</button>
+        <p class="note">Writes an immutable SPL-Memo inscription to X1 mainnet referencing the Rhizomorph registry <span class="mono" id="registryAddr"></span>. Network fee ≈ 0.002 XNT. No tokens are transferred.</p>
+        <h3>Recent inscriptions across the braid</h3>
+        <ul class="feed" id="feed"><li class="muted">Loading…</li></ul>
+      </section>
+    </aside>
+  </main>
+
+  <footer class="foot">
+    <span>Source text: <i>The Kabbalistic Rhizomorph — A Compositional Architecture</i></span>
+    <span class="mono">RPC https://rpc.mainnet.x1.xyz · SVM</span>
+  </footer>
+
+  <script type="module" src="/src/main.ts"></script>
+</body>
+</html>
