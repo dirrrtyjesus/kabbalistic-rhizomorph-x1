@@ -27,12 +27,14 @@ import {
   type PathDef,
   type Phase,
   type Clade,
+  type WorldKey,
   orientationOf,
 } from "./data.ts";
 import {
   analyse,
   edgesFrom,
   cascade,
+  computeRatchetHash,
   type Analysis,
 } from "./model.ts";
 import {
@@ -73,6 +75,7 @@ interface Particle {
 class AppState {
   system: "kircher" | "ari" = "kircher";
   phase: Phase = "explore";
+  activeWorld: WorldKey = "atzilut";
   kappa: number = 0.6;
   phi: number = 0.8;
   layers = {
@@ -88,6 +91,8 @@ class AppState {
   brokenVessels: Set<number> = new Set();
   sparks: Spark[] = [];
   sparksGathered: number = 0;
+  totalGematria: number = 0;
+  ratchetHash: string = "0000000000000000";
   localRatchet: number = 0;
   uncommittedIota: number = 0;
   chainSigma: number = 0;
@@ -100,6 +105,8 @@ class AppState {
   oscillator: OscillatorState | null = null;
   cymatics: CymaticVisualizer | null = null;
   currentSlot: number = 85942729;
+  tzimtzumRadius: number = 0;
+  kavBeamProgress: number = 0;
 
   constructor() {
     this.connection = new Connection(X1_RPC_URL, "confirmed");
@@ -132,6 +139,7 @@ const el = {
   layerToggles: document.getElementById("layerToggles")!,
   phaseActions: document.getElementById("phaseActions")!,
   inspTag: document.getElementById("inspTag")!,
+  partzufVoiceBanner: document.getElementById("partzufVoiceBanner")!,
   inspBody: document.getElementById("inspBody")!,
   mEta: document.getElementById("mEta")!,
   mEtaMax: document.getElementById("mEtaMax")!,
@@ -144,8 +152,16 @@ const el = {
   riskBars: document.getElementById("riskBars")!,
   tempoChart: document.getElementById("tempoChart")!,
   bottlenecks: document.getElementById("bottlenecks")!,
+  activeWorldTag: document.getElementById("activeWorldTag")!,
+  worldFoldBtn: document.getElementById("worldFoldBtn") as HTMLButtonElement,
+  worldUnfoldBtn: document.getElementById("worldUnfoldBtn") as HTMLButtonElement,
+  worldPills: document.getElementById("worldPills")!,
+  compositionFormula: document.getElementById("compositionFormula")!,
+  worldBlurb: document.getElementById("worldBlurb")!,
   worlds: document.getElementById("worlds")!,
   lSparks: document.getElementById("lSparks")!,
+  lGematria: document.getElementById("lGematria")!,
+  lRatchetHash: document.getElementById("lRatchetHash")!,
   lSigma: document.getElementById("lSigma")!,
   lDelta: document.getElementById("lDelta")!,
   lChain: document.getElementById("lChain")!,
@@ -190,7 +206,9 @@ function setPhase(phase: Phase) {
   // Reset stage classes
   el.stage.className = "stage";
   if (phase === "akudim") el.stage.classList.add("akudim");
-  if (phase === "shevirah" || phase === "nekudim") el.stage.classList.add("dim");
+  if (phase === "tzimtzum") el.stage.classList.add("tzimtzum");
+  if (phase === "nekudim") el.stage.classList.add("nekudim");
+  if (phase === "shevirah") el.stage.classList.add("dim");
   if (phase === "tikkun") el.stage.classList.add("gathering");
 
   const pInfo = PHASES.find((p) => p.key === phase)!;
@@ -206,9 +224,34 @@ function setPhase(phase: Phase) {
     state.brokenVessels.clear();
     const btn = document.createElement("button");
     btn.className = "btn primary";
-    btn.textContent = "Initiate Tzimtzum & Emanate Nekudim →";
-    btn.onclick = () => setPhase("nekudim");
+    btn.textContent = "Initiate Tzimtzum (Primordial Contraction) →";
+    btn.onclick = () => setPhase("tzimtzum");
     el.phaseActions.appendChild(btn);
+  } else if (phase === "tzimtzum") {
+    state.conductance.fill(0);
+    state.kappa = 0;
+    state.phi = 0.3;
+    state.brokenVessels.clear();
+    state.tzimtzumRadius = 0;
+    state.kavBeamProgress = 0;
+    showToast("Tzimtzum: Light withdraws to the perimeter, clearing the Tehiru void with the glowing Reshimu.");
+
+    const btnPierce = document.createElement("button");
+    btnPierce.className = "btn gold";
+    btnPierce.textContent = "Pierce Tehiru with the Kav (Single Ray) →";
+    btnPierce.onclick = () => {
+      // Trigger Kav ray descent
+      let prog = 0;
+      const kavTimer = setInterval(() => {
+        prog += 0.08;
+        state.kavBeamProgress = Math.min(1, prog);
+        if (prog >= 1) {
+          clearInterval(kavTimer);
+          setPhase("nekudim");
+        }
+      }, 30);
+    };
+    el.phaseActions.appendChild(btnPierce);
   } else if (phase === "nekudim") {
     // Only Kav chain active with near-zero lateral conductance
     state.conductance.fill(0);
@@ -216,7 +259,8 @@ function setPhase(phase: Phase) {
     state.sparks = [];
     state.kappa = 0.05;
     state.phi = 1.1; // Pressure surge
-    showToast("Surging divine influx Or through uncoupled points...");
+    state.kavBeamProgress = 1;
+    showToast("Kav HaYashar pierced the void: 10 solitary points without transverse anastomosis (lo histaklu da b'da).");
     const btn = document.createElement("button");
     btn.className = "btn danger";
     btn.textContent = "Trigger Shevirat HaKelim (Catastrophic Rupture) ⚡";
@@ -317,7 +361,20 @@ function gatherSpark(spark: Spark) {
   state.sparksGathered++;
   state.localRatchet++;
   state.uncommittedIota++;
+
+  // Accumulate Gematria per spark from the host Sefira
+  const sparkGematria = Math.max(1, Math.round(SEFIROT[spark.sefiraId].gematria / 41));
+  state.totalGematria += sparkGematria;
+  state.ratchetHash = computeRatchetHash(
+    state.ratchetHash,
+    state.totalGematria,
+    state.sparksGathered,
+    state.currentSlot
+  );
+
   el.lSparks.textContent = `${state.sparksGathered} / ${SPARK_TOTAL}`;
+  el.lGematria.textContent = state.totalGematria.toString();
+  el.lRatchetHash.textContent = state.ratchetHash;
   el.lSigma.textContent = state.localRatchet.toString();
   el.lDelta.textContent = `+${state.uncommittedIota}`;
   el.commitBtn.disabled = !state.walletPubkey || state.uncommittedIota === 0;
@@ -326,7 +383,8 @@ function gatherSpark(spark: Spark) {
   const remaining = state.sparks.filter((s) => s.sefiraId === spark.sefiraId && !s.gathered).length;
   if (remaining === 0) {
     state.brokenVessels.delete(spark.sefiraId);
-    showToast(`Vessel ${SEFIROT[spark.sefiraId].name} rectified!`);
+    const pzf = PARTZUFIM[SEFIROT[spark.sefiraId].partzuf];
+    showToast(`Vessel ${SEFIROT[spark.sefiraId].name} rectified! ${pzf.name}: "${pzf.voice}"`);
   }
   updateModel();
 }
@@ -336,12 +394,21 @@ function gatherAllSparks() {
   state.sparksGathered = SPARK_TOTAL;
   state.localRatchet += state.sparks.length;
   state.uncommittedIota += state.sparks.length;
+  state.totalGematria = 2868; // Complete Tree of Life Sefirot gematria
+  state.ratchetHash = computeRatchetHash(
+    state.ratchetHash,
+    state.totalGematria,
+    SPARK_TOTAL,
+    state.currentSlot
+  );
   state.brokenVessels.clear();
   el.lSparks.textContent = `${SPARK_TOTAL} / ${SPARK_TOTAL}`;
+  el.lGematria.textContent = state.totalGematria.toString();
+  el.lRatchetHash.textContent = state.ratchetHash;
   el.lSigma.textContent = state.localRatchet.toString();
   el.lDelta.textContent = `+${state.uncommittedIota}`;
   el.commitBtn.disabled = !state.walletPubkey;
-  showToast("All 288 Sparks Gathered into the Rectified Memory Ledger!");
+  showToast("All 288 Sparks Gathered! Proof-of-Tikkun Ratchet Hash R(t) verified.");
   updateModel();
 }
 
@@ -378,10 +445,14 @@ function updateModel() {
     });
   });
 
+  const activeWorldDef = WORLDS.find((w) => w.key === state.activeWorld);
+  const worldDensity = activeWorldDef ? activeWorldDef.density : 0;
+
   const res = analyse({
     edges,
     coupling: state.kappa,
     influx: state.phi,
+    worldDensity,
   });
   state.analysis = res;
 
@@ -484,6 +555,68 @@ function renderMetrics(res: Analysis) {
   }
 }
 
+function setupWorldNavigation() {
+  el.worldPills.innerHTML = "";
+  WORLDS.forEach((w) => {
+    const pill = document.createElement("button");
+    pill.className = `world-pill ${state.activeWorld === w.key ? "on" : ""}`;
+    pill.textContent = w.name;
+    pill.onclick = () => setWorld(w.key);
+    el.worldPills.appendChild(pill);
+  });
+
+  el.worldFoldBtn.onclick = () => {
+    // Fold upward towards Atzilut: Assiah -> Yetzirah -> Beriah -> Atzilut
+    const order: WorldKey[] = ["assiah", "yetzirah", "beriah", "atzilut"];
+    const idx = order.indexOf(state.activeWorld);
+    if (idx < order.length - 1) {
+      setWorld(order[idx + 1]);
+      showToast(`Folded upward into ${WORLDS.find((w) => w.key === order[idx + 1])!.name}: Frictionless Coherence ↑`);
+    } else {
+      showToast("Already at Supernal Atzilut (Apex of Hishtalshelut)");
+    }
+  };
+
+  el.worldUnfoldBtn.onclick = () => {
+    // Unfold downward towards Assiah: Atzilut -> Beriah -> Yetzirah -> Assiah
+    const order: WorldKey[] = ["atzilut", "beriah", "yetzirah", "assiah"];
+    const idx = order.indexOf(state.activeWorld);
+    if (idx < order.length - 1) {
+      setWorld(order[idx + 1]);
+      showToast(`Unfolded downward into ${WORLDS.find((w) => w.key === order[idx + 1])!.name}: Substrate Densification ↓`);
+    } else {
+      showToast("Already anchored in physical Assiah");
+    }
+  };
+
+  // Set initial blurb and highlight
+  const currentW = WORLDS.find((w) => w.key === state.activeWorld)!;
+  el.activeWorldTag.textContent = currentW.name;
+  el.worldBlurb.textContent = `${currentW.name} (${currentW.gloss}): ${currentW.blurb}`;
+}
+
+function setWorld(key: WorldKey) {
+  state.activeWorld = key;
+  const w = WORLDS.find((x) => x.key === key)!;
+  el.activeWorldTag.textContent = w.name;
+  el.worldBlurb.textContent = `${w.name} (${w.gloss}): ${w.blurb}`;
+
+  // Update pills
+  el.worldPills.querySelectorAll(".world-pill").forEach((pill, i) => {
+    pill.classList.toggle("on", WORLDS[i].key === key);
+  });
+
+  // Highlight composition formula
+  el.compositionFormula.querySelectorAll(".comp-w").forEach((cw) => {
+    cw.classList.toggle("active", cw.getAttribute("data-w") === key);
+  });
+  el.compositionFormula.querySelectorAll(".comp-op").forEach((co) => {
+    co.classList.toggle("active", co.getAttribute("data-w") === key);
+  });
+
+  updateModel();
+}
+
 function renderWorlds() {
   el.worlds.innerHTML = "";
   const densities = WORLDS.map((w) => w.density);
@@ -496,14 +629,15 @@ function renderWorlds() {
   WORLDS.forEach((w, idx) => {
     const cVal = results[idx];
     const row = document.createElement("div");
-    row.className = "world";
+    row.className = `world ${state.activeWorld === w.key ? "active" : ""}`;
     row.innerHTML = `
-      <span class="nm">${w.name}</span>
-      <div class="gauge-track">
+      <span class="nm" style="cursor:pointer;" title="Switch to ${w.name}">${w.name}</span>
+      <div class="gauge-track" style="cursor:pointer;">
         <div class="gauge-fill" style="width: ${cVal * 100}%;"></div>
       </div>
       <span class="mono">${cVal.toFixed(3)}</span>
     `;
+    row.onclick = () => setWorld(w.key);
     el.worlds.appendChild(row);
   });
 }
@@ -518,6 +652,15 @@ function renderInspector() {
     const pressure = state.analysis ? state.analysis.backPressure[s.id] : 0;
     const stress = state.analysis ? state.analysis.stress[s.id] : 0;
 
+    // Display Partzuf Voice Banner
+    el.partzufVoiceBanner.className = "partzuf-voice-banner show";
+    el.partzufVoiceBanner.innerHTML = `
+      <div class="voice-quote">
+        <span class="quote-mark">“</span>${pzf.voice}<span class="quote-mark">”</span>
+        <span class="voice-speaker">— Voice of ${pzf.name} (${pzf.hebrew})</span>
+      </div>
+    `;
+
     el.inspBody.innerHTML = `
       <div class="insp-title">
         <span class="heb">${s.hebrew}</span>
@@ -526,6 +669,7 @@ function renderInspector() {
       </div>
       <dl class="kv">
         <dt>Partzuf Persona</dt><dd><b>${pzf.name}</b> (${pzf.hebrew})</dd>
+        <dt>Gematria (גימטריא)</dt><dd class="mono"><b>${s.gematria}</b></dd>
         <dt>Pillar</dt><dd class="capitalize">${s.pillar}</dd>
         <dt>Biophysical Analogue</dt><dd>${s.analogue}</dd>
         <dt>Hydraulic Pressure</dt><dd class="mono">${pressure.toFixed(3)} (Stress: ${stress.toFixed(2)})</dd>
@@ -556,6 +700,9 @@ function renderInspector() {
     el.inspTag.textContent = "TZINOR CONDUIT";
     const current = state.analysis ? state.analysis.current[p.id] : 0;
 
+    el.partzufVoiceBanner.className = "partzuf-voice-banner";
+    el.partzufVoiceBanner.innerHTML = "";
+
     el.inspBody.innerHTML = `
       <div class="insp-title">
         <span class="heb">${letObj.glyph}</span>
@@ -564,6 +711,7 @@ function renderInspector() {
       </div>
       <dl class="kv">
         <dt>Clade Group</dt><dd><span class="swatch" style="background:${clade.color}"></span><b>${clade.label}</b></dd>
+        <dt>Gematria (גימטריא)</dt><dd class="mono"><b>${letObj.gematria}</b></dd>
         <dt>Geometric Vector</dt><dd class="capitalize">${clade.geometry} (Attribution: ${letObj.attribution})</dd>
         <dt>Fungal Analogue</dt><dd>${clade.analogue}</dd>
         <dt>Shefa Current I</dt><dd class="mono">${current.toFixed(4)}</dd>
@@ -582,6 +730,8 @@ function renderInspector() {
     document.getElementById("gSever")!.onclick = () => { state.conductance[p.id] = 0.0; updateModel(); };
   } else {
     el.inspTag.textContent = "SELECTION";
+    el.partzufVoiceBanner.className = "partzuf-voice-banner";
+    el.partzufVoiceBanner.innerHTML = "";
     el.inspBody.innerHTML = `<p class="muted">Click any Sefira orb or pathway conduit in the Flower of Life diagram to inspect biophysical properties.</p>`;
   }
 }
@@ -788,9 +938,12 @@ function initCanvas() {
     // 1. Shefa Stream Particles
     if (state.layers.flow) {
       const paths = state.currentPaths;
+      const wDef = WORLDS.find((w) => w.key === state.activeWorld);
+      const spdMult = wDef ? wDef.speedMultiplier : 1.0;
+
       for (let i = state.particles.length - 1; i >= 0; i--) {
         const pt = state.particles[i];
-        pt.t += pt.speed;
+        pt.t += pt.speed * spdMult;
         if (pt.t < 0 || pt.t > 1) {
           state.particles.splice(i, 1);
           continue;
@@ -815,7 +968,71 @@ function initCanvas() {
       }
     }
 
-    // 2. Trapped / Scattered Sparks (Birur)
+    // 2. Primordial Tzimtzum Contraction & Reshimu Residue
+    if (state.phase === "tzimtzum") {
+      if (state.tzimtzumRadius < 380) {
+        state.tzimtzumRadius += 2.8;
+      }
+      const r = state.tzimtzumRadius;
+      const cx = 510, cy = 432;
+      ctx.save();
+      
+      // Dark void (Tehiru)
+      ctx.beginPath();
+      ctx.arc(cx, cy, r, 0, Math.PI * 2);
+      ctx.fillStyle = "rgba(4, 5, 8, 0.94)";
+      ctx.fill();
+
+      // Faint glowing ring of primordial residue (Reshimu)
+      ctx.beginPath();
+      ctx.arc(cx, cy, r, 0, Math.PI * 2);
+      ctx.strokeStyle = "rgba(255, 204, 77, 0.85)";
+      ctx.lineWidth = 2.5;
+      ctx.shadowColor = "#ffcc4d";
+      ctx.shadowBlur = 22;
+      ctx.stroke();
+
+      // Secondary shimmering ripple
+      ctx.beginPath();
+      ctx.arc(cx, cy, Math.max(10, r - 25), 0, Math.PI * 2);
+      ctx.strokeStyle = "rgba(127, 211, 255, 0.3)";
+      ctx.lineWidth = 1.2;
+      ctx.stroke();
+      ctx.shadowBlur = 0;
+
+      // Void text
+      ctx.font = "italic 18px 'Cormorant Garamond', Georgia, serif";
+      ctx.fillStyle = "rgba(255, 255, 255, 0.75)";
+      ctx.textAlign = "center";
+      ctx.fillText("Tehiru (The Primordial Void) · Reshimu Residue", cx, cy - 8);
+      ctx.font = "12px 'JetBrains Mono', monospace";
+      ctx.fillStyle = "rgba(255, 204, 77, 0.8)";
+      ctx.fillText("Or Ein Sof withdrawn to perimeter · Ready for Kav HaYashar", cx, cy + 18);
+      ctx.restore();
+    }
+
+    // 3. Kav HaYashar (Single Primordial Ray Piercing Downward)
+    if (state.kavBeamProgress > 0) {
+      const kY1 = 147;
+      const kY2 = 147 + (716 - 147) * state.kavBeamProgress;
+      ctx.save();
+      ctx.beginPath();
+      ctx.moveTo(509, kY1);
+      ctx.lineTo(509, kY2);
+      const beamW = 3.5 + Math.sin(Date.now() / 100) * 1.5;
+      ctx.lineWidth = beamW * 2.2;
+      ctx.strokeStyle = "rgba(255, 204, 77, 0.35)";
+      ctx.stroke();
+      ctx.lineWidth = beamW;
+      ctx.strokeStyle = "#ffffff";
+      ctx.shadowColor = "#ffd21a";
+      ctx.shadowBlur = 20;
+      ctx.stroke();
+      ctx.shadowBlur = 0;
+      ctx.restore();
+    }
+
+    // 4. Trapped / Scattered Sparks (Birur)
     state.sparks.forEach((s) => {
       if (s.gathered) return;
       s.x += s.vx;
@@ -962,7 +1179,9 @@ async function commitTikkunToX1() {
   }
   const iota = state.uncommittedIota;
   const cVal = state.analysis?.C.toFixed(3) || "0.000";
-  const memoStr = `rhizomorph:v1|tikkun|iota=${iota}|sigma=${state.localRatchet}|C=${cVal}`;
+  const pzfKey = state.selectedSefira ? state.selectedSefira.partzuf : "zeir";
+  const pzfObj = PARTZUFIM[pzfKey];
+  const memoStr = `rhizomorph:v1|tikkun|pzf=${pzfKey}|voice=${pzfObj.voiceKey}|iota=${iota}|gem=${state.totalGematria}|R=${state.ratchetHash}|C=${cVal}`;
 
   el.commitBtn.disabled = true;
   el.commitBtn.textContent = "Broadcasting to X1 Mainnet…";
@@ -1119,7 +1338,7 @@ async function pumpDROAction() {
 
   // If wallet connected, record on-chain DRO pump memo
   if (state.walletPubkey) {
-    const memoStr = `rhizomorph:v1|dro|pump|amp=${state.oscillator.lastAmplitude.toFixed(3)}|w0=${state.oscillator.omega0.toFixed(3)}|sigma=${state.chainSigma || 576}`;
+    const memoStr = `rhizomorph:v1|dro|pump|amp=${state.oscillator.lastAmplitude.toFixed(3)}|w0=${state.oscillator.omega0.toFixed(3)}|gem=${state.totalGematria}|R=${state.ratchetHash}|sigma=${state.chainSigma || 576}`;
     try {
       const provider = state.activeWalletProvider || (window as any).solana;
       if (provider && provider.signAndSendTransaction) {
@@ -1176,7 +1395,9 @@ function exportDROAction() {
     evalRes.amplitude,
     state.analysis ? state.analysis.C : 0.819,
     state.chainSigma || 576,
-    state.currentSlot
+    state.currentSlot,
+    state.totalGematria || 2868,
+    state.ratchetHash
   );
   const blob = new Blob([svg], { type: "image/svg+xml" });
   const url = URL.createObjectURL(blob);
@@ -1224,6 +1445,7 @@ function initEvents() {
 
 // --- Boot Application ---
 setupPhases();
+setupWorldNavigation();
 initEvents();
 initCanvas();
 updateModel();

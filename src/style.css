@@ -200,3 +200,123 @@ input[type="range"] { width: 100%; accent-color: var(--gold); }
 
 .foot { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 8px; padding: 16px 24px 28px; color: var(--muted); font-size: 12px; border-top: 1px solid var(--line); }
 
+/* Partzuf Voice Banner */
+.partzuf-voice-banner {
+  margin-bottom: 12px;
+  display: none;
+}
+.partzuf-voice-banner.show {
+  display: block;
+}
+.voice-quote {
+  padding: 10px 14px;
+  border-radius: 10px;
+  background: rgba(255, 204, 77, 0.08);
+  border-left: 3px solid var(--gold);
+  font-family: var(--serif);
+  font-size: 15px;
+  line-height: 1.4;
+  color: #fff2cc;
+  font-style: italic;
+  position: relative;
+}
+.voice-speaker {
+  display: block;
+  font-style: normal;
+  font-size: 11px;
+  color: var(--gold);
+  margin-top: 4px;
+  font-family: var(--sans);
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+}
+
+/* World Fold / Unfold Navigation */
+.world-nav {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  margin-bottom: 10px;
+}
+.world-nav-btn {
+  padding: 6px 10px;
+  font-size: 11px;
+  border-radius: 8px;
+  white-space: nowrap;
+}
+.world-pills {
+  display: flex;
+  gap: 4px;
+  flex: 1;
+}
+.world-pill {
+  flex: 1;
+  padding: 6px 4px;
+  text-align: center;
+  font-size: 11px;
+  border-radius: 6px;
+  border: 1px solid var(--line);
+  background: transparent;
+  transition: all 0.2s;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.world-pill:hover {
+  background: rgba(255, 255, 255, 0.05);
+}
+.world-pill.on {
+  border-color: var(--gold);
+  background: rgba(255, 204, 77, 0.15);
+  color: var(--gold);
+  font-weight: 600;
+}
+.composition-formula {
+  background: rgba(0, 0, 0, 0.35);
+  padding: 8px 10px;
+  border-radius: 8px;
+  border: 1px solid var(--line);
+  margin-bottom: 10px;
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--muted);
+}
+.comp-w.active {
+  color: var(--gold);
+  font-weight: bold;
+  text-shadow: 0 0 8px rgba(255, 204, 77, 0.4);
+}
+.comp-op.active {
+  color: #7fd3ff;
+  font-weight: bold;
+  text-shadow: 0 0 8px rgba(127, 211, 255, 0.6);
+}
+.world-blurb {
+  margin-top: 10px;
+  font-size: 12px;
+  color: #c9c5b2;
+  font-style: italic;
+}
+.world.active {
+  background: rgba(255, 204, 77, 0.08);
+  border-radius: 6px;
+  padding: 4px 6px;
+}
+
+/* Ratchet Hash glowing display */
+.ratchet-hash {
+  color: #4be3a4;
+  letter-spacing: 1.5px;
+  text-shadow: 0 0 8px rgba(75, 227, 164, 0.4);
+  font-size: 14px;
+}
+
+/* Stage Tzimtzum & Nekudim effects */
+.stage.tzimtzum img {
+  filter: brightness(0.2) contrast(1.4) saturate(0.2);
+  transition: filter 1s ease-in-out;
+}
+.stage.nekudim img {
+  filter: brightness(0.35) contrast(1.2) saturate(0.4);
+  transition: filter 1s ease-in-out;
+}
+

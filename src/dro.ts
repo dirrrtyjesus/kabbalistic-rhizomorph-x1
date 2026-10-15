@@ -306,15 +306,17 @@ export function generateDROCertificateSVG(
   amplitude: number,
   coherence: number,
   ratchet: number,
-  slot: number | string
+  slot: number | string,
+  gematria: number = 2868,
+  ratchetHash: string = "0000000000000000"
 ): string {
   const stateLabel = amplitude > 0.8 ? "LUMINOUS" : amplitude > 0.2 ? "RADIANT" : "DIM";
   const glowColor = amplitude > 0.8 ? "#ffcc4d" : "#7fd3ff";
   const nowStr = new Date().toISOString();
 
-  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 1000" width="100%" height="100%" style="background:#05070c; font-family:'Inter',system-ui,sans-serif;">
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 1020" width="100%" height="100%" style="background:#05070c; font-family:'Inter',system-ui,sans-serif;">
   <defs>
-    <radialGradient id="halo" cx="50%" cy="40%" r="50%">
+    <radialGradient id="halo" cx="50%" cy="38%" r="50%">
       <stop offset="0%" stop-color="${glowColor}" stop-opacity="${Math.min(0.5, amplitude * 0.4)}"/>
       <stop offset="100%" stop-color="#05070c" stop-opacity="0"/>
     </radialGradient>
@@ -324,62 +326,70 @@ export function generateDROCertificateSVG(
         50% { transform: scale(1.03) rotate(${osc.omega0 * 2}deg); opacity: 1; }
         100% { transform: scale(0.97) rotate(0deg); opacity: 0.8; }
       }
-      .pulsar { transform-origin: 400px 380px; animation: dro-pulse ${Math.max(1.5, 6 - osc.omega0)}s ease-in-out infinite; }
+      .pulsar { transform-origin: 400px 360px; animation: dro-pulse ${Math.max(1.5, 6 - osc.omega0)}s ease-in-out infinite; }
     </style>
   </defs>
 
   <!-- Background Border Frame -->
-  <rect x="20" y="20" width="760" height="960" rx="20" fill="#080b12" stroke="rgba(255,204,77,0.25)" stroke-width="2"/>
-  <rect x="32" y="32" width="736" height="936" rx="14" fill="none" stroke="rgba(127,211,255,0.15)" stroke-width="1" stroke-dasharray="6 4"/>
+  <rect x="20" y="20" width="760" height="980" rx="20" fill="#080b12" stroke="rgba(255,204,77,0.25)" stroke-width="2"/>
+  <rect x="32" y="32" width="736" height="956" rx="14" fill="none" stroke="rgba(127,211,255,0.15)" stroke-width="1" stroke-dasharray="6 4"/>
   
   <!-- Aura Halo -->
-  <circle cx="400" cy="380" r="320" fill="url(#halo)"/>
+  <circle cx="400" cy="360" r="300" fill="url(#halo)"/>
 
   <!-- Living Cymatic Chladni Resonator Graphic -->
   <g class="pulsar">
-    <circle cx="400" cy="380" r="140" fill="none" stroke="${glowColor}" stroke-width="${1.5 + amplitude}" stroke-opacity="0.8"/>
-    <circle cx="400" cy="380" r="90" fill="none" stroke="rgba(140,245,164,0.7)" stroke-width="1.5" stroke-dasharray="12 6"/>
-    <path d="M 400 240 Q 480 320 400 380 Q 320 440 400 520 Q 480 440 400 380 Q 320 320 400 240 Z" fill="none" stroke="${glowColor}" stroke-width="2"/>
-    <path d="M 260 380 Q 340 460 400 380 Q 460 300 540 380 Q 460 460 400 380 Q 340 300 260 380 Z" fill="none" stroke="#7fd3ff" stroke-width="2"/>
-    <circle cx="400" cy="380" r="${8 + amplitude * 12}" fill="#ffffff" filter="drop-shadow(0 0 16px ${glowColor})"/>
+    <circle cx="400" cy="360" r="130" fill="none" stroke="${glowColor}" stroke-width="${1.5 + amplitude}" stroke-opacity="0.8"/>
+    <circle cx="400" cy="360" r="80" fill="none" stroke="rgba(140,245,164,0.7)" stroke-width="1.5" stroke-dasharray="12 6"/>
+    <path d="M 400 230 Q 480 300 400 360 Q 320 420 400 490 Q 480 420 400 360 Q 320 300 400 230 Z" fill="none" stroke="${glowColor}" stroke-width="2"/>
+    <path d="M 270 360 Q 340 430 400 360 Q 460 290 530 360 Q 460 430 400 360 Q 340 290 270 360 Z" fill="none" stroke="#7fd3ff" stroke-width="2"/>
+    <circle cx="400" cy="360" r="${8 + amplitude * 12}" fill="#ffffff" filter="drop-shadow(0 0 16px ${glowColor})"/>
   </g>
 
   <!-- Typography & Identity -->
-  <text x="400" y="80" text-anchor="middle" fill="#ffcc4d" font-size="14" font-weight="700" letter-spacing="3">FRACTAL HARMONIC PHYSICS · X1 NETWORK</text>
-  <text x="400" y="115" text-anchor="middle" fill="#ffffff" font-size="28" font-family="'Cormorant Garamond', Georgia, serif" font-weight="700" letter-spacing="1">SOULBOUND RESONANT OSCILLATOR</text>
-  <text x="400" y="142" text-anchor="middle" fill="#8e8c7f" font-size="13" font-family="monospace">d²x/dt² + 2ζω₀ dx/dt + ω₀² x = F(t)</text>
+  <text x="400" y="70" text-anchor="middle" fill="#ffcc4d" font-size="13" font-weight="700" letter-spacing="3">FRACTAL HARMONIC PHYSICS · X1 NETWORK</text>
+  <text x="400" y="102" text-anchor="middle" fill="#ffffff" font-size="26" font-family="'Cormorant Garamond', Georgia, serif" font-weight="700" letter-spacing="1">SOULBOUND RESONANT OSCILLATOR</text>
+  <text x="400" y="126" text-anchor="middle" fill="#8e8c7f" font-size="12" font-family="monospace">d²x/dt² + 2ζω₀ dx/dt + ω₀² x = F(t)</text>
 
   <!-- Badge -->
-  <rect x="330" y="160" width="140" height="28" rx="6" fill="rgba(255,204,77,0.12)" stroke="${glowColor}" stroke-width="1"/>
-  <text x="400" y="179" text-anchor="middle" fill="${glowColor}" font-size="12" font-weight="700" letter-spacing="1">${stateLabel}</text>
+  <rect x="330" y="142" width="140" height="26" rx="6" fill="rgba(255,204,77,0.12)" stroke="${glowColor}" stroke-width="1"/>
+  <text x="400" y="159" text-anchor="middle" fill="${glowColor}" font-size="11" font-weight="700" letter-spacing="1">${stateLabel}</text>
 
   <!-- Parameters Table -->
-  <g transform="translate(60, 680)">
-    <rect width="680" height="200" rx="12" fill="rgba(255,255,255,0.02)" stroke="rgba(255,255,255,0.07)" stroke-width="1"/>
+  <g transform="translate(60, 640)">
+    <rect width="680" height="280" rx="12" fill="rgba(255,255,255,0.02)" stroke="rgba(255,255,255,0.07)" stroke-width="1"/>
     
     <!-- Row 1 -->
-    <text x="30" y="40" fill="#8e8c7f" font-size="13">Steward / Sovereign Owner</text>
-    <text x="650" y="40" text-anchor="end" fill="#ffffff" font-size="13" font-family="monospace">${osc.ownerPubkey}</text>
+    <text x="30" y="38" fill="#8e8c7f" font-size="12">Steward / Sovereign Owner</text>
+    <text x="650" y="38" text-anchor="end" fill="#ffffff" font-size="12" font-family="monospace">${osc.ownerPubkey}</text>
 
     <!-- Row 2 -->
-    <text x="30" y="75" fill="#8e8c7f" font-size="13">Natural Frequency (ω₀)</text>
-    <text x="650" y="75" text-anchor="end" fill="#ffcc4d" font-size="13" font-family="monospace">${osc.omega0.toFixed(3)} rad/s (${osc.frequencyHz.toFixed(2)} Hz)</text>
+    <text x="30" y="72" fill="#8e8c7f" font-size="12">Natural Frequency (ω₀)</text>
+    <text x="650" y="72" text-anchor="end" fill="#ffcc4d" font-size="12" font-family="monospace">${osc.omega0.toFixed(3)} rad/s (${osc.frequencyHz.toFixed(2)} Hz)</text>
 
     <!-- Row 3 -->
-    <text x="30" y="110" fill="#8e8c7f" font-size="13">Harmonic Archetype</text>
-    <text x="650" y="110" text-anchor="end" fill="#7fd3ff" font-size="13">${osc.harmonicRatio}</text>
+    <text x="30" y="106" fill="#8e8c7f" font-size="12">Harmonic Archetype</text>
+    <text x="650" y="106" text-anchor="end" fill="#7fd3ff" font-size="12">${osc.harmonicRatio}</text>
 
     <!-- Row 4 -->
-    <text x="30" y="145" fill="#8e8c7f" font-size="13">Topological Coherence (C_topo) / Floor</text>
-    <text x="650" y="145" text-anchor="end" fill="#8cf5a4" font-size="13" font-family="monospace">${coherence.toFixed(3)} / φ⁻¹ (0.618)</text>
+    <text x="30" y="140" fill="#8e8c7f" font-size="12">Topological Coherence (C_topo) / Floor</text>
+    <text x="650" y="140" text-anchor="end" fill="#8cf5a4" font-size="12" font-family="monospace">${coherence.toFixed(3)} / φ⁻¹ (0.618)</text>
 
     <!-- Row 5 -->
-    <text x="30" y="180" fill="#8e8c7f" font-size="13">Cumulative Tikkun Ratchet (Σ) / X1 Slot</text>
-    <text x="650" y="180" text-anchor="end" fill="#ffffff" font-size="13" font-family="monospace">Σ = ${ratchet} · slot #${slot}</text>
+    <text x="30" y="174" fill="#8e8c7f" font-size="12">Cumulative Tikkun Ratchet (Σ) / X1 Slot</text>
+    <text x="650" y="174" text-anchor="end" fill="#ffffff" font-size="12" font-family="monospace">Σ = ${ratchet} · slot #${slot}</text>
+
+    <!-- Row 6: Gematria Tally -->
+    <text x="30" y="208" fill="#8e8c7f" font-size="12">Hebrew Gematria Tally (גימטריא)</text>
+    <text x="650" y="208" text-anchor="end" fill="#ffd21a" font-size="12" font-family="monospace">${gematria} / 2868</text>
+
+    <!-- Row 7: Proof-of-Tikkun Ratchet Hash -->
+    <text x="30" y="242" fill="#8e8c7f" font-size="12">Proof-of-Tikkun Hash R(t+1) = R(t) ⊕_τ ι</text>
+    <text x="650" y="242" text-anchor="end" fill="#4be3a4" font-size="12" font-family="monospace">0x${ratchetHash}</text>
   </g>
 
   <!-- Footer Seal -->
-  <text x="400" y="930" text-anchor="middle" fill="#555866" font-size="11" font-family="monospace">DYNAMIC RESONANT OBJECT · IMMUTABLE STEWARDSHIP ON X1 MAINNET · ${nowStr}</text>
+  <text x="400" y="960" text-anchor="middle" fill="#555866" font-size="11" font-family="monospace">DYNAMIC RESONANT OBJECT · IMMUTABLE STEWARDSHIP ON X1 MAINNET · ${nowStr}</text>
 </svg>`;
 }
 

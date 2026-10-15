@@ -79,6 +79,7 @@
     <aside class="side">
       <section class="panel" id="inspector">
         <header><h2>Inspector</h2><span class="tag" id="inspTag">SEFIRA</span></header>
+        <div class="partzuf-voice-banner" id="partzufVoiceBanner"></div>
         <div id="inspBody"></div>
       </section>
 
@@ -105,10 +106,24 @@
         <ul class="bottlenecks" id="bottlenecks"></ul>
       </section>
 
-      <section class="panel">
-        <header><h2>Seder Hishtalshelut</h2><span class="tag">≔ cascade</span></header>
-        <p class="note mono">𝒲<sub>Assiah</sub> ≔ 𝓕(𝒲<sub>Yetzirah</sub> ≔ 𝓖(𝒲<sub>Beriah</sub> ≔ 𝓗(𝒲<sub>Atzilut</sub>)))</p>
+      <section class="panel" id="worldsPanel">
+        <header>
+          <h2>Seder Hishtalshelut</h2>
+          <span class="tag" id="activeWorldTag">Atzilut</span>
+        </header>
+        <div class="world-nav">
+          <button class="btn world-nav-btn" id="worldFoldBtn" title="Fold upward toward primordial Atzilut">Fold ↑</button>
+          <div class="world-pills" id="worldPills"></div>
+          <button class="btn world-nav-btn" id="worldUnfoldBtn" title="Unfold downward toward physical Assiah">Unfold ↓</button>
+        </div>
+        <p class="note mono composition-formula" id="compositionFormula">
+          <span class="comp-w" data-w="assiah">𝒲<sub>Assiah</sub></span> ≔ 
+          <span class="comp-op" data-w="assiah">𝓕</span>(<span class="comp-w" data-w="yetzirah">𝒲<sub>Yetzirah</sub></span> ≔ 
+          <span class="comp-op" data-w="yetzirah">𝓖</span>(<span class="comp-w" data-w="beriah">𝒲<sub>Beriah</sub></span> ≔ 
+          <span class="comp-op" data-w="beriah">𝓗</span>(<span class="comp-w" data-w="atzilut">𝒲<sub>Atzilut</sub></span>)))
+        </p>
         <div class="worlds" id="worlds"></div>
+        <p class="world-blurb note" id="worldBlurb"></p>
       </section>
 
       <section class="panel" id="droPanel">
@@ -140,7 +155,9 @@
       <section class="panel" id="ledgerPanel">
         <header><h2>Tikkun Ledger · X1</h2><span class="tag">R(t+1) = R(t) ⊕<sub>τ</sub> ι(t)</span></header>
         <div class="metrics">
-          <div class="metric"><span>Sparks gathered (this cycle)</span><b class="mono" id="lSparks">0 / 288</b></div>
+          <div class="metric"><span>Sparks gathered</span><b class="mono" id="lSparks">0 / 288</b></div>
+          <div class="metric"><span>Gematria Tally (גימטריא)</span><b class="mono" id="lGematria">0</b></div>
+          <div class="metric" style="grid-column: 1 / -1;"><span>Proof-of-Tikkun Ratchet Hash R(t)</span><b class="mono ratchet-hash" id="lRatchetHash" title="R(t+1) = hash(R(t) ⊕ gem ⊕ sparks ⊕ slot)">0000000000000000</b></div>
           <div class="metric"><span>Σ local ratchet</span><b class="mono" id="lSigma">0</b></div>
           <div class="metric"><span>Uncommitted ι</span><b class="mono" id="lDelta">0</b></div>
           <div class="metric"><span>Σ on X1 (your commits)</span><b class="mono" id="lChain">—</b></div>

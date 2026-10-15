@@ -200,3 +200,28 @@ export function cascade(base: ModelInput, densities: number[]): number[] {
   }
   return out;
 }
+
+/** Cryptographic rolling ratchet hash for Proof-of-Tikkun:
+ *  R(t+1) = hash(R(t) ⊕ gematria ⊕ sparks ⊕ slot)
+ *  Deterministic 16-character hex hash that binds on-chain inscription history to the spark gematria tally.
+ */
+export function computeRatchetHash(
+  prevHash: string,
+  gematria: number,
+  sparks: number,
+  slot: number
+): string {
+  const input = `${prevHash || "0000000000000000"}:${gematria}:${sparks}:${slot}`;
+  let h1 = 0xdeadbeef ^ (slot & 0xffffffff);
+  let h2 = 0x41c6ce57 ^ (gematria & 0xffffffff);
+  for (let i = 0; i < input.length; i++) {
+    const ch = input.charCodeAt(i);
+    h1 = Math.imul(h1 ^ ch, 2654435761);
+    h2 = Math.imul(h2 ^ ch, 1597334677);
+  }
+  h1 = Math.imul(h1 ^ (h1 >>> 16), 2246822507) ^ Math.imul(h2 ^ (h2 >>> 13), 3266489909);
+  h2 = Math.imul(h2 ^ (h2 >>> 16), 2246822507) ^ Math.imul(h1 ^ (h1 >>> 13), 3266489909);
+  const p1 = (h1 >>> 0).toString(16).padStart(8, "0");
+  const p2 = (h2 >>> 0).toString(16).padStart(8, "0");
+  return (p1 + p2).slice(0, 16);
+}
